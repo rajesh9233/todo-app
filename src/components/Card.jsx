@@ -70,6 +70,7 @@ export default function Card(props) {
           )}
         </TodoAction>
       )}
+      {/* format the time */}
       <TodoTime>{moment(todo.createdAt).format("LLL")}</TodoTime>
     </TodoItem>
   );

@@ -18,6 +18,7 @@ export default function Index() {
     setTodoList(todos);
   };
 
+  //edit the exisiting task
   const handleAddTodo = (taskName, i) => {
     if (taskName) {
       const todos = [...todoList];
@@ -30,6 +31,7 @@ export default function Index() {
     }
   };
 
+  //adding the new task
   const addTodoList = (taskName) => {
     const todos = [...todoList];
     todos.push({
@@ -43,12 +45,15 @@ export default function Index() {
     localStorage.setItem("todoList", JSON.stringify(todos));
   };
 
+  //To edit the task
   const handleEdit = (i) => {
     const todos = [...todoList];
     todos[i].isEdit = true;
     todos[i].isDone = false;
     setTodoList(todos);
   };
+
+  //To click tick icon to add
   const handleSave = (i) => {
     const todos = [...todoList];
     todos[i].isDone = false;
@@ -57,6 +62,8 @@ export default function Index() {
     setTodoList(todos);
     localStorage.setItem("todoList", JSON.stringify(todos));
   };
+
+  //To click delete icon to mark complete
   const handleComplete = (i) => {
     const todos = [...todoList];
     todos[i].isDone = true;
@@ -84,6 +91,7 @@ export default function Index() {
             );
           })
         ) : (
+          // no task
           <h5>You don't have any task.Click Add Task to Create the task</h5>
         )}
       </div>

@@ -10,6 +10,7 @@ const Input = styled.input`
   width: 30%;
 `;
 export default function TextInput(props) {
+  //click on enter to add/save
   const handleKeyDown = (e) => {
     const value = e.target.value;
     if (e.key === "Enter" && value) {
