@@ -1,100 +1,205 @@
-import React, { useEffect, useState } from "react";
-import Card from "../../components/Card";
-import AddTodo from "./AddTodo";
+import React, { useState } from "react";
+import "./styles.scss";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faCheck,
+  faClose,
+  faAngleDoubleLeft,
+  faAngleLeft,
+  faAngleRight,
+  faAngleDoubleRight,
+} from "@fortawesome/free-solid-svg-icons";
 
-export default function Index() {
-  const [todoList, setTodoList] = useState([]);
+function TodoApp() {
+  const [tasks, setTasks] = useState([]);
+  const [taskValue, setTaskValue] = useState("");
+  const [editTaskId, setEditTaskId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  useEffect(() => {
-    const todosList = JSON.parse(localStorage.getItem("todoList"));
-    if (todosList && todosList.length) {
-      setTodoList(todosList);
-    }
-  }, []);
-
-  const handleInputChange = (e, i) => {
-    const todos = [...todoList];
-    todos[i].name = e.target.value;
-    setTodoList(todos);
+  const handleCreateTask = (e) => {
+    e.preventDefault();
+    const task = {
+      id: Date.now(),
+      task: taskValue,
+      completed: false,
+    };
+    setTasks([...tasks, task]);
+    setTaskValue("");
   };
 
-  //edit the exisiting task
-  const handleAddTodo = (taskName, i) => {
-    if (taskName) {
-      const todos = [...todoList];
-      todos[i].name = taskName;
-      todos[i].isDone = false;
-      todos[i].isEdit = false;
-      todos[i].createdAt = Date.now();
-      setTodoList(todos);
-      localStorage.setItem("todoList", JSON.stringify(todos));
-    }
+  const handleEditTask = (id) => {
+    setEditTaskId(id);
   };
 
-  //adding the new task
-  const addTodoList = (taskName) => {
-    const todos = [...todoList];
-    todos.push({
-      name: taskName,
-      id: todoList.length + 1,
-      createdAt: Date.now(),
-      isDone: false,
-      isEdit: false,
+  const handleUpdateTask = (e) => {
+    e.preventDefault();
+    if (e.target.task.value) {
+      const updatedTask = {
+        id: editTaskId,
+        task: e.target.task.value,
+        completed: false,
+      };
+      const updatedTasks = tasks.map((task) => {
+        if (task.id === editTaskId) {
+          return updatedTask;
+        }
+        return task;
+      });
+      setTasks(updatedTasks);
+    }
+    setEditTaskId(null);
+  };
+
+  const handleDeleteTask = (id) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const handleCompleteTask = (id) => {
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === id) {
+        task.completed = !task.completed;
+      }
+      return task;
     });
-    setTodoList(todos);
-    localStorage.setItem("todoList", JSON.stringify(todos));
+    setTasks(updatedTasks);
   };
 
-  //To edit the task
-  const handleEdit = (i) => {
-    const todos = [...todoList];
-    todos[i].isEdit = true;
-    todos[i].isDone = false;
-    setTodoList(todos);
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
-  //To click tick icon to add
-  const handleSave = (i) => {
-    const todos = [...todoList];
-    todos[i].isDone = false;
-    todos[i].isEdit = false;
-    todos[i].createdAt = Date.now();
-    setTodoList(todos);
-    localStorage.setItem("todoList", JSON.stringify(todos));
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
-  //To click delete icon to mark complete
-  const handleComplete = (i) => {
-    const todos = [...todoList];
-    todos[i].isDone = true;
-    todos[i].isEdit = false;
-    todos[i].createdAt = Date.now();
-    setTodoList(todos);
-    localStorage.setItem("todoList", JSON.stringify(todos));
+  const handleNextPage = () => {
+    if (currentPage < pageNumbers.length) {
+      setCurrentPage(currentPage + 1);
+    }
   };
+
+  const filteredTasks = tasks.filter((task) =>
+    task.task.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const indexOfLastTask = currentPage * itemsPerPage;
+  const indexOfFirstTask = indexOfLastTask - itemsPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(filteredTasks.length / itemsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
   return (
-    <div>
-      <AddTodo addToTodo={addTodoList} />
-      <div>
-        {todoList && todoList.length > 0 ? (
-          todoList.map((item, i) => {
-            return (
-              <Card
-                todo={item}
-                key={i}
-                onEdit={() => handleEdit(i)}
-                onSave={() => handleSave(i)}
-                onComplete={() => handleComplete(i)}
-                handleInputChange={(e) => handleInputChange(e, i)}
-                handleAddTodo={(e) => handleAddTodo(e, i)}
-              />
-            );
-          })
-        ) : (
-          // no task
-          <h5>You don't have any task.Click Add Task to Create the task</h5>
-        )}
+    <div className="todo-app">
+      <form onSubmit={handleCreateTask}>
+        <input
+          type="text"
+          name="task"
+          placeholder="Add a task..."
+          value={taskValue}
+          onChange={(e) => setTaskValue(e.target.value)}
+        />
+        <button type="submit" disabled={!taskValue}>
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
+      </form>
+      <div className="search">
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          onChange={handleSearch}
+        />
       </div>
+      {currentTasks.length > 0 ? (
+        <>
+          <ul>
+            {currentTasks.map((task) => {
+              return editTaskId === task.id ? (
+                <form onSubmit={handleUpdateTask}>
+                  <input
+                    type="text"
+                    name="task"
+                    defaultValue={
+                      tasks.find((task) => task.id === editTaskId).task
+                    }
+                  />
+                  <button type="submit">Update</button>
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faClose}
+                      onClick={() => setEditTaskId(null)}
+                    />
+                  </span>
+                </form>
+              ) : (
+                <li key={task.id} className={task.completed ? "completed" : ""}>
+                  {task.task}
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faEdit}
+                      onClick={() => handleEditTask(task.id)}
+                    />
+                    <FontAwesomeIcon
+                      icon={faTrash}
+                      onClick={() => handleDeleteTask(task.id)}
+                    />
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      onClick={() => handleCompleteTask(task.id)}
+                    />
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="pagination">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <FontAwesomeIcon icon={faAngleDoubleLeft} />
+            </button>
+            <button onClick={handlePrevPage} disabled={currentPage === 1}>
+              <FontAwesomeIcon icon={faAngleLeft} />
+            </button>
+            {pageNumbers.map((number) => (
+              <span
+                key={number}
+                onClick={() => setCurrentPage(number)}
+                className={currentPage === number ? "active" : ""}
+              >
+                {number}
+              </span>
+            ))}
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === pageNumbers.length}
+            >
+              <FontAwesomeIcon icon={faAngleRight} />
+            </button>
+            <button
+              onClick={() => setCurrentPage(pageNumbers.length)}
+              disabled={currentPage === pageNumbers.length}
+            >
+              <FontAwesomeIcon icon={faAngleDoubleRight} />
+            </button>
+          </div>
+        </>
+      ) : (
+        <h5>No task to show</h5>
+      )}
     </div>
   );
 }
+
+export default TodoApp;
